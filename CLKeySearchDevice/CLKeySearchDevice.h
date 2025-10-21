@@ -114,27 +114,27 @@ public:
 
 
     // Initialize the device
-    virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride);
+    void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride) override;
 
     // Perform one iteration
-    virtual void doStep();
+    void doStep() override;
 
     // Tell the device which addresses to search for
-    virtual void setTargets(const std::set<KeySearchTarget> &targets);
+    void setTargets(const std::set<KeySearchTarget> &targets) override;
 
     // Get the private keys that have been found so far
-    virtual size_t getResults(std::vector<KeySearchResult> &results);
+    size_t getResults(std::vector<KeySearchResult> &results) override;
 
     // The number of keys searched at each step
-    virtual uint64_t keysPerStep();
+    uint64_t keysPerStep() override;
 
     // The name of the device
-    virtual std::string getDeviceName();
+    std::string getDeviceName() override;
 
     // Memory information for this device
-    virtual void getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem);
+    void getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem) override;
 
-    virtual secp256k1::uint256 getNextKey();
+    secp256k1::uint256 getNextKey() override;
 };
 
 #endif

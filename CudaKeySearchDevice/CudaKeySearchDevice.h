@@ -73,21 +73,21 @@ public:
 
     CudaKeySearchDevice(int device, int threads, int pointsPerThread, int blocks = 0);
 
-    virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride);
+    void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride) override;
 
-    virtual void doStep();
+    void doStep() override;
 
-    virtual void setTargets(const std::set<KeySearchTarget> &targets);
+    void setTargets(const std::set<KeySearchTarget> &targets) override;
 
-    virtual size_t getResults(std::vector<KeySearchResult> &results);
+    size_t getResults(std::vector<KeySearchResult> &results) override;
 
-    virtual uint64_t keysPerStep();
+    uint64_t keysPerStep() override;
 
-    virtual std::string getDeviceName();
+    std::string getDeviceName() override;
 
-    virtual void getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem);
+    void getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem) override;
 
-    virtual secp256k1::uint256 getNextKey();
+    secp256k1::uint256 getNextKey() override;
 };
 
 #endif
