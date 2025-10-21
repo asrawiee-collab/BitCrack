@@ -3,10 +3,13 @@
 
 __global__ void keyFinderKernel(int points, int compression);
 __global__ void keyFinderKernelWithDouble(int points, int compression);
+__global__ void keyFinderKernelWithBallot(int points, int compression);
 
-void callKeyFinderKernel(int blocks, int threads, int points, bool useDouble, int compression)
+void callKeyFinderKernel(int blocks, int threads, int points, bool useDouble, int compression, bool useBallot)
 {
-	if(useDouble) {
+	if(useBallot) {
+		keyFinderKernelWithBallot <<<blocks, threads>>>(points, compression);
+	} else if(useDouble) {
 		keyFinderKernelWithDouble <<<blocks, threads >>>(points, compression);
 	} else {
 		keyFinderKernel <<<blocks, threads>>> (points, compression);

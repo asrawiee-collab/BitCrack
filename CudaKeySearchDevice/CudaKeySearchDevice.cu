@@ -259,3 +259,69 @@ __global__ void keyFinderKernelWithDouble(int points, int compression)
 {
     doIterationWithDouble(points, compression);
 }
+
+__device__ void doIterationWithBallot(int pointsPerThread, int compression)
+{
+    unsigned int *chain = _CHAIN[0];
+    unsigned int *xPtr = ec::getXPtr();
+    unsigned int *yPtr = ec::getYPtr();
+
+    // Multiply together all (_Gx - x) and then invert
+    unsigned int inverse[8] = {0,0,0,0,0,0,0,1};
+    for(int i = 0; i < pointsPerThread; i++) {
+        unsigned int x[8];
+        readInt(xPtr, i, x);
+
+        bool uncompressedFound = false;
+        unsigned int uncompressedDigest[5];
+
+        bool compressedFound = false;
+        unsigned int compressedDigest[5];
+
+        unsigned int y[8];
+        if(compression == PointCompressionType::UNCOMPRESSED || compression == PointCompressionType::BOTH) {
+            readInt(yPtr, i, y);
+            hashPublicKey(x, y, uncompressedDigest);
+            uncompressedFound = checkHash(uncompressedDigest);
+        }
+
+        if(compression == PointCompressionType::COMPRESSED || compression == PointCompressionType::BOTH) {
+            hashPublicKeyCompressed(x, readIntLSW(yPtr, i), compressedDigest);
+            compressedFound = checkHash(compressedDigest);
+        }
+
+        unsigned int ballot = __ballot_sync(0xffffffff, uncompressedFound || compressedFound);
+
+        if(ballot) {
+            if(uncompressedFound) {
+                setResultFound(i, false, x, y, uncompressedDigest);
+            }
+            if(compressedFound) {
+                if(compression == PointCompressionType::COMPRESSED) {
+                    readInt(yPtr, i, y);
+                }
+                setResultFound(i, true, x, y, compressedDigest);
+            }
+        }
+
+        beginBatchAdd(_INC_X, x, chain, i, i, inverse);
+    }
+
+    doBatchInverse(inverse);
+
+    for(int i = pointsPerThread - 1; i >= 0; i--) {
+
+        unsigned int newX[8];
+        unsigned int newY[8];
+
+        completeBatchAdd(_INC_X, _INC_Y, xPtr, yPtr, i, i, chain, inverse, newX, newY);
+
+        writeInt(xPtr, i, newX);
+        writeInt(yPtr, i, newY);
+    }
+}
+
+__global__ void keyFinderKernelWithBallot(int points, int compression)
+{
+    doIterationWithBallot(points, compression);
+}

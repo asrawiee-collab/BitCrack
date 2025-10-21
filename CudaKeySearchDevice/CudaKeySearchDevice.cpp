@@ -56,6 +56,8 @@ CudaKeySearchDevice::CudaKeySearchDevice(int device, int threads, int pointsPerT
     _device = device;
 
     _pointsPerThread = pointsPerThread;
+
+    _useBallot = true;
 }
 
 void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride)
@@ -148,9 +150,9 @@ void CudaKeySearchDevice::doStep()
 
     try {
         if(_iterations < 2 && _startExponent.cmp(numKeys) <= 0) {
-            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, true, _compression);
+            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, true, _compression, _useBallot);
         } else {
-            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, false, _compression);
+            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, false, _compression, _useBallot);
         }
     } catch(cuda::CudaException ex) {
         throw KeySearchException(ex.msg);
