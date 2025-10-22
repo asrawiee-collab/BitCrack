@@ -55,6 +55,8 @@ typedef struct {
     secp256k1::uint256 stride = 1;
 
     bool follow = false;
+
+    std::string pattern = "";
 }RunConfig;
 
 static RunConfig _config;
@@ -368,6 +370,30 @@ void readCheckpointFile()
 
 int run()
 {
+    if(!_config.pattern.empty()) {
+        std::string startKeyHex = _config.pattern;
+        std::string endKeyHex = _config.pattern;
+
+        while(startKeyHex.length() < 64) {
+            startKeyHex += "0";
+        }
+
+        while(endKeyHex.length() < 64) {
+            endKeyHex += "f";
+        }
+
+        secp256k1::uint256 patternStart(startKeyHex);
+        secp256k1::uint256 patternEnd(endKeyHex);
+
+        // if nextKey from checkpoint is not in pattern range, restart from beginning of pattern
+        if(_config.nextKey.cmp(patternStart) < 0 || _config.nextKey.cmp(patternEnd) > 0) {
+            _config.nextKey = patternStart;
+        }
+
+        _config.startKey = patternStart;
+        _config.endKey = patternEnd;
+    }
+
     if(_config.device < 0 || _config.device >= _devices.size()) {
         Logger::log(LogLevel::Error, "device " + util::format(_config.device) + " does not exist");
         return 1;
@@ -517,6 +543,7 @@ int main(int argc, char **argv)
     parser.add("", "--continue", true);
     parser.add("", "--share", true);
     parser.add("", "--stride", true);
+    parser.add("", "--pattern", true);
 
     try {
         parser.parse(argc, argv);
@@ -602,6 +629,11 @@ int main(int argc, char **argv)
                 }
             } else if(optArg.equals("-f", "--follow")) {
                 _config.follow = true;
+            } else if(optArg.equals("", "--pattern")) {
+                if(!util::isHex(optArg.arg)) {
+                    throw std::string("invalid hex string");
+                }
+                _config.pattern = optArg.arg;
             }
 
 		} catch(std::string err) {
@@ -613,6 +645,11 @@ int main(int argc, char **argv)
     if(listDevices) {
         printDeviceList(_devices);
         return 0;
+    }
+
+    if(!_config.pattern.empty() && (_config.startKey.cmp(1) != 0 || _config.endKey.cmp(secp256k1::N - 1) != 0)) {
+        Logger::log(LogLevel::Error, "Error: --pattern cannot be used with --keyspace");
+        return 1;
     }
 
 	// Verify device exists

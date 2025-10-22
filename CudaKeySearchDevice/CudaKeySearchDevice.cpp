@@ -46,15 +46,6 @@ CudaKeySearchDevice::CudaKeySearchDevice(int device, int threads, int pointsPerT
             _threads /= 2;
             _blocks *= 2;
         }
-
-        // Auto-tune for Ampere GPUs
-        if (info.major == 8) {
-            _pointsPerThread = 1024;
-            _blocks = info.mpCount * 4;
-            Logger::log(LogLevel::Info, "Ampere GPU detected. Auto-tuning parameters for best performance.");
-            Logger::log(LogLevel::Info, "Setting points per thread to " + util::format("%d", _pointsPerThread));
-            Logger::log(LogLevel::Info, "Setting blocks to " + util::format("%d", _blocks));
-        }
     } else {
         _threads = threads;
         _blocks = blocks;
@@ -64,12 +55,7 @@ CudaKeySearchDevice::CudaKeySearchDevice(int device, int threads, int pointsPerT
 
     _device = device;
 
-    // Use the tuned value if it was set
-    if (_pointsPerThread == 0) {
-        _pointsPerThread = pointsPerThread;
-    }
-
-    _useBallot = true;
+    _pointsPerThread = pointsPerThread;
 }
 
 void CudaKeySearchDevice::init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride)
@@ -162,9 +148,9 @@ void CudaKeySearchDevice::doStep()
 
     try {
         if(_iterations < 2 && _startExponent.cmp(numKeys) <= 0) {
-            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, true, _compression, _useBallot);
+            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, true, _compression);
         } else {
-            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, false, _compression, _useBallot);
+            callKeyFinderKernel(_blocks, _threads, _pointsPerThread, false, _compression);
         }
     } catch(cuda::CudaException ex) {
         throw KeySearchException(ex.msg);

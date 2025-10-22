@@ -8,7 +8,7 @@
 #include "secp256k1.h"
 
 
-void callKeyFinderKernel(int blocks, int threads, int points, bool useDouble, int compression, bool useBallot);
+void callKeyFinderKernel(int blocks, int threads, int points, bool useDouble, int compression);
 
 void waitForKernel();
 

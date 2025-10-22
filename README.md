@@ -70,6 +70,10 @@ Options:
 
 --continue FILE
     Save/load progress from FILE
+
+--pattern PATTERN
+    Search for a private key starting with a specific pattern.
+    The pattern is a hexadecimal string.
 ```
 
 #### Examples

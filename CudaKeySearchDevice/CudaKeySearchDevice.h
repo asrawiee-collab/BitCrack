@@ -67,27 +67,25 @@ private:
 
     bool verifyKey(const secp256k1::uint256 &privateKey, const secp256k1::ecpoint &publicKey, const unsigned int hash[5], bool compressed);
 
-    bool _useBallot;
-
 public:
 
     CudaKeySearchDevice(int device, int threads, int pointsPerThread, int blocks = 0);
 
-    void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride) override;
+    virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride);
 
-    void doStep() override;
+    virtual void doStep();
 
-    void setTargets(const std::set<KeySearchTarget> &targets) override;
+    virtual void setTargets(const std::set<KeySearchTarget> &targets);
 
-    size_t getResults(std::vector<KeySearchResult> &results) override;
+    virtual size_t getResults(std::vector<KeySearchResult> &results);
 
-    uint64_t keysPerStep() override;
+    virtual uint64_t keysPerStep();
 
-    std::string getDeviceName() override;
+    virtual std::string getDeviceName();
 
-    void getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem) override;
+    virtual void getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem);
 
-    secp256k1::uint256 getNextKey() override;
+    virtual secp256k1::uint256 getNextKey();
 };
 
 #endif
